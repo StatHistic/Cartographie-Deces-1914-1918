@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cartographie des décès</title><link rel="icon" href="assets/favicon.ico" sizes="any"><link rel="icon" type="image/png" href="assets/favicon.png"><link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css"><link rel="stylesheet" href="assets/styles.css"></head><body><main><header class="site-bar"><a href="#accueil" id="home-link" class="site-brand"><img src="assets/stathistic-logo.png" alt="StatHistic — 1914–1918" width="108" height="72"><span>Accueil</span></a><label for="site-language" id="language-label">Langue</label><select id="site-language" aria-label="Langue"><option value="fr">Français</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option></select></header>
+<div id="site-content"></div>
+<div id="map-view" hidden>
+<div class="app-layout">
+  <aside class="control-panel" aria-label="Filtres cartographiques">
+    <div class="field"><label for="theme">Thématique</label><select id="theme" disabled></select></div>
+    <div class="field"><label for="criterion">Critère</label><select id="criterion" disabled></select></div>
+    <div class="field"><label for="modality">Modalité</label><select id="modality" disabled></select></div>
+    <div class="field" hidden><label for="unit-type">Type de régiment</label><select id="unit-type"></select></div>
+    <div class="field" hidden><label for="unit-number">Numéro</label><select id="unit-number"></select></div>
+    <div class="field" hidden><label for="unit-exact">Régiment</label><select id="unit-exact"></select></div>
+    <div class="field"><label for="temporal">Temporalité</label><select id="temporal" disabled></select></div>
+    <div id="date-selectors" hidden>
+      <div class="field"><label for="year">Année</label><select id="year"></select></div>
+      <div class="field" hidden><label for="month">Mois</label><select id="month"></select></div>
+      <div class="field" hidden><label for="day">Jour</label><select id="day"></select></div>
+    </div>
+    <div class="date-current" id="current-date" aria-live="off"></div>
+    <div class="nav-buttons">
+      <button id="previous" title="Date précédente" aria-label="Date précédente" disabled>◀</button>
+      <button id="play" class="play-continuous" title="Lecture continue" aria-label="Lecture continue" disabled>▶ Lecture continue</button>
+      <button id="pause" title="Pause" aria-label="Pause" disabled>⏸</button>
+      <button id="next" title="Date suivante" aria-label="Date suivante" disabled>▶</button>
+    </div>
+    <div class="field"><label for="speed">Vitesse de défilement : <span id="speed-value">500 ms</span></label><input id="speed" type="range" min="100" max="3000" value="500" step="50"></div>
+    <div class="animation-status" id="animation-status">Initialisation…</div>
+    <p class="map-feedback"><a class="explore-link" id="map-feedback-link" target="_blank" rel="noopener noreferrer" hidden>Accéder au formulaire</a></p>
+  </aside>
+  <section class="map-panel" id="map-panel" aria-label="Carte des décès">
+    <header class="map-header"><h1>Décès des soldats de l’armée française, 1914–1918</h1><button id="toggle-values" aria-pressed="false" title="Afficher des valeurs sur un échantillon de points">Afficher des effectifs</button></header>
+    <div class="map-wrapper">
+      <div class="fullscreen-title">Décès des soldats de l’armée française, 1914–1918</div>
+      <button class="fullscreen-button" id="fullscreen" title="Afficher la carte en plein écran" aria-label="Basculer le plein écran" aria-pressed="false">⛶</button>
+      <div class="fullscreen-date-controls">
+        <button id="fs-previous" title="Date précédente" aria-label="Date précédente" disabled>◀</button>
+        <span id="fs-date" class="fullscreen-current-date"></span>
+        <button id="fs-next" title="Date suivante" aria-label="Date suivante" disabled>▶</button>
+        <button id="fs-play" class="play-continuous" title="Lecture continue" aria-label="Lecture continue" disabled>▶ Lecture continue</button>
+        <button id="fs-pause" title="Pause" aria-label="Pause" disabled>⏸</button>
+      <label class="fullscreen-speed" for="fs-speed">Vitesse de défilement : <span id="fs-speed-value">500 ms</span><input id="fs-speed" type="range" min="100" max="3000" value="500" step="50"></label>
+      </div>
+      <button id="fs-toggle-values" class="fullscreen-values" aria-pressed="false" title="Afficher des valeurs sur un échantillon de points">Afficher des effectifs</button>
+      <div class="map-army-legend" id="legends"></div><div id="fs-legend" hidden></div>
+      <div class="map-summary" id="map-summary" aria-live="off"></div>
+      <div class="map-source" id="source">Source : Service historique des armées, Traitement : V. Loonis</div>
+      <div id="map" role="region" aria-label="Carte interactive, cliquez sur un symbole pour consulter ses données"></div>
+    </div>
+    <div class="status" id="status" role="status" aria-live="polite">Chargement des données…</div>
+    <button id="retry" hidden>Réessayer</button>
+
+    <div class="dataset-note" id="dataset-note"></div>
+  </section>
+</div>
+</div>
+<section id="feedback-view" class="site-page" hidden><h1>Une remarque ou une correction ?</h1><div id="feedback-grist" hidden><p>Le formulaire s’ouvre sur Grist. Les réponses ne sont pas publiées sur ce site.</p><p><a class="explore-link" id="feedback-grist-link" target="_blank" rel="noopener noreferrer">Accéder au formulaire</a></p></div>    <details class="feedback-panel" open>
+      <summary>Une remarque ou une correction ?</summary>
+      <p>Votre message est destiné à l’équipe du projet et ne sera pas affiché sur cette carte. Ne renseignez vos coordonnées que si vous souhaitez être recontacté.</p>
+      <form id="feedback-form" method="post">
+        <fieldset id="feedback-fields" disabled>
+          <div class="field"><label for="feedback-message">Votre remarque (obligatoire)</label><textarea id="feedback-message" name="message" required maxlength="5000" rows="4"></textarea></div>
+          <div class="feedback-contact">
+            <div class="field"><label for="feedback-name">Nom (facultatif)</label><input id="feedback-name" name="name" autocomplete="name" maxlength="120"></div>
+            <div class="field"><label for="feedback-email">Adresse e-mail (facultative)</label><input id="feedback-email" name="email" type="email" autocomplete="email" maxlength="254"></div>
+          </div>
+          <div class="feedback-contact"><div class="field"><label for="feedback-organization">Organisme (facultatif)</label><input id="feedback-organization" name="organization" maxlength="200" autocomplete="organization"></div><div class="field"><label for="feedback-cases">Nombre de cas concernés (facultatif)</label><input id="feedback-cases" name="cases" type="number" min="1" step="1"></div></div>
+          <button type="submit">Envoyer ma remarque</button>
+        </fieldset>
+      </form>
+      <p id="feedback-status" role="status">Le formulaire sera disponible après configuration de la réception des messages.</p>
+    </details><p><a href="#ameliorer">Retour à l’aide</a> · <a href="#accueil">Retour à l’accueil</a></p></section>
+<noscript>Activez JavaScript pour utiliser les filtres et la carte.</noscript>
+<script src="assets/vendor/leaflet/leaflet.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/content.js"></script>
+<script src="assets/translations.js"></script>
+<script src="assets/site.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/app.js"></script>
+</main></body></html>
